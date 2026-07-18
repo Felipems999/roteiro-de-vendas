@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Produto</title>
+        <style>
+            .container{
+                width: 100%;
+                height: 100%;
+                padding: 5px;
+                margin-bottom: 10px;
+                display: block;
+            }
+
+            .group{
+                margin-bottom: 15px;
+            }
+
+            .btn{
+                margin: 15px 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <form id="form" method="post" class="container">
+            <div class="group">
+                <span>
+                    Nome da oferta:
+                </span>
+                <span>
+                    <input id="nome_oferta" type="text"/>
+                </span>
+            </div>
+            <div class="group">
+                <span>
+                    Resultado prometido:
+                </span>
+                <span>
+                    <input id="resultado" type="text"/>
+                </span>
+            </div>
+            <div class="group">
+                <span>
+                    Público:
+                </span>
+                <span>
+                    <input id="publico" type="text"/>
+                </span>
+            </div>
+            <div class="btn">
+                <input type="button" value="Enviar" onclick="enviar()"/>
+            </div>
+            <div class="group">
+                <span>
+                    Roteiro:
+                </span>
+                <span>
+                    <p id="roteiro"></p>
+                </span>
+            </div>
+        </form>
+
+        <script>
+          async function enviar(){
+            const obj = {
+              "nome_oferta": document.getElementById("nome_oferta").value,
+              "resultado": document.getElementById("resultado").value,
+              "publico": document.getElementById("publico").value,
+            };
+
+            const data = await fetch('http://localhost:8800', {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify(obj),
+            })
+              .then(response => response.json())
+              .then(data => data)
+              .catch(error => {
+                console.error(error);
+              });
+
+            document.getElementById("roteiro").textContent = data.roteiro;
+          }
+        </script>
+    </body>
+</html>
