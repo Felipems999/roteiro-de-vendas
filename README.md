@@ -18,7 +18,41 @@ Ele pode ser obtido no site oficial da linguagem:
 
 - [Python](https://www.python.org/downloads/);
 
-Em seguida, basta rodar esse o comando em um terminal:
+Crie um ambiente virtual com o comando:
+
+```shell
+python3 -m venv venv
+```
+ou
+```shell
+python -m venv venv
+```
+
+Enfim, basta entrar no seu ambiente virutal:
+
+```shell
+source venv\bin\activate
+```
+
+Instale as dependências necessárias com o comando:
+
+```shell
+pip install -r req.txt
+```
+
+Configure sua .env file:
+
+```bash
+cp .env.example .env
+```
+
+Abra o arquivo .env e insira sua chave da API em GENAI_API_KEY:
+
+```env
+GENAI_API_KEY="your_genai_api_key"
+```
+
+Em seguida, basta rodar esse comando em um terminal:
 
 ```shell
 python3 backend.py
@@ -69,3 +103,69 @@ function gerarRoteiro(dados) {
 Para evitar o erro caso "dados.publico" seja "undefined", acrescentei uma operação ternária na declaração da
 variável publico que verifica se o dado existe. O mesmo foi feito na declaração dos items da lista "linhas",
 para que o mesmo erro não ocorra caso "dodos.nomeOferta" ou "dados.resultado" também não sejam preenchidos.
+
+## PARTE C
+
+Para implementar a parte c, foi necessário:
+- Instalar a biblioteca "google-genai";
+- Gerar uma chave de API no Google AI Studio;
+- Criar um arquivo .env para armazenar a chave da API com segurança;
+- Criar um client para a API do Google;
+- Alterar a variável roteiro, que agora iria receber o texto da reposta da API do Google.
+
+### Comparação dos códigos:
+
+Antes:
+```python
+data = json.loads(body_content)
+
+roterio = f"""Você, {data['publico']}, perde noites pensando na sua segurança financeira?\n
+      Nós temos uma solução! Foi disponibilizado para você o {data['nome_oferta']}!\n Graças à ela,
+      você {data['resultado']}"""
+
+self.send_response(201)
+self.send_header('Content-type', 'application/json')
+self.send_header('Access-Control-Allow-Origin', '*')
+self.end_headers()
+
+
+response = {
+    "message": "Success",
+    "roteiro": roterio,
+}
+
+self.wfile.write(json.dumps(response).encode("utf-8"))
+```
+
+Depois:
+```python
+data = json.loads(body_content)
+
+api_key = os.getenv("GENAI_API_KEY")
+
+if api_key:
+    client = genai.Client(api_key=api_key)
+
+    ai_response = client.models.generate_content(
+                model="gemini-3-flash-preview",
+                contents=f"""
+                Escreva um roteiro de vendas com base nestes dados:
+                {data['nome_oferta']}, {data['resultado']} e {data['publico']}.
+                """,
+            )
+
+    roteiro = ai_response.text if ai_response.text else "Houve um erro com a geração do roteiro!"
+
+    self.send_response(201)
+    self.send_header('Content-type', 'application/json')
+    self.send_header('Access-Control-Allow-Origin', '*')
+    self.end_headers()
+
+
+    response = {
+        "message": "Success",
+        "roteiro": roteiro,
+    }
+
+    self.wfile.write(json.dumps(response).encode("utf-8"))
+```
