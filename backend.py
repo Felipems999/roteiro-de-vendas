@@ -11,8 +11,8 @@ class HTTPHandler(srv.BaseHTTPRequestHandler):
 
         data = json.loads(body_content)
 
-        roterio = f"""Você, {data['publico']}, perde noites pensando na sua segurança financeira?
-        Nós temos uma solução! Foi disponibilizado para você o {data['nome_oferta']}! Graças à ela,
+        roterio = f"""Você, {data['publico']}, perde noites pensando na sua segurança financeira?\n
+        Nós temos uma solução! Foi disponibilizado para você o {data['nome_oferta']}!\n Graças à ela,
         você {data['resultado']}"""
 
         self.send_response(201)
