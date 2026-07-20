@@ -1,5 +1,10 @@
+import os
 import http.server as srv
 import json
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
 
 class HTTPHandler(srv.BaseHTTPRequestHandler):
     def do_POST(self):
@@ -9,24 +14,43 @@ class HTTPHandler(srv.BaseHTTPRequestHandler):
         else:
             body_content = "{}"
 
-        data = json.loads(body_content)
+        try:
+            data = json.loads(body_content)
 
-        roterio = f"""Você, {data['publico']}, perde noites pensando na sua segurança financeira?\n
-        Nós temos uma solução! Foi disponibilizado para você o {data['nome_oferta']}!\n Graças à ela,
-        você {data['resultado']}"""
+            api_key = os.getenv("GENAI_API_KEY")
 
-        self.send_response(201)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
+            if api_key:
+                client = genai.Client(api_key=api_key)
+
+                ai_response = client.models.generate_content(
+                            model="gemini-3-flash-preview",
+                            contents=f"""
+                            Escreva um roteiro de vendas com base nestes dados:
+                            {data['nome_oferta']}, {data['resultado']} e {data['publico']}.
+                            """,
+                        )
+
+                roteiro = ai_response.text if ai_response.text else "Houve um erro com a geração do roteiro!"
+
+                self.send_response(201)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
 
 
-        response = {
-            "message": "Success",
-            "roteiro": roterio,
-        }
+                response = {
+                    "message": "Success",
+                    "roteiro": roteiro,
+                }
 
-        self.wfile.write(json.dumps(response).encode("utf-8"))
+                self.wfile.write(json.dumps(response).encode("utf-8"))
+            else:
+                response = {
+                    "message": "Error",
+                    "roteiro": "Chave da API não configurada",
+                }
+        except Exception as e:
+            print(e)
 
     def do_OPTIONS(self):
             self.send_response(200)
